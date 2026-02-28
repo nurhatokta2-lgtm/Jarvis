@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Jarvis Ultra
+Comment=Gemini + Ada voice AI assistant
+Exec=__JARVIS_EXEC__
+Path=__JARVIS_PATH__
+Terminal=false
+Categories=Development;Utility;AI;
+StartupNotify=true

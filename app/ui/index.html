@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jarvis Ultra</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #0f172a; color: #e2e8f0; }
+    .app { max-width: 900px; margin: 0 auto; padding: 24px; }
+    textarea { width: 100%; min-height: 100px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 8px; padding: 10px; }
+    button { background: #6366f1; color: white; border: none; padding: 10px 16px; margin-right: 8px; border-radius: 8px; cursor: pointer; }
+    .card { background: #1e293b; border-radius: 8px; padding: 16px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <h1>Jarvis Ultra (Gemini + Ada Voice)</h1>
+  <textarea id="prompt" placeholder="Ask anything..."></textarea>
+  <div style="margin-top: 12px">
+    <button onclick="sendText()">Send</button>
+    <button onclick="listenVoice()">🎤 Speak</button>
+  </div>
+  <div class="card"><strong>Assistant:</strong><p id="answer">Ready.</p></div>
+  <div class="card"><strong>Plugin Analytics:</strong><pre id="plugin">{}</pre></div>
+</div>
+<script>
+const sessionId = "ui-session";
+
+async function sendText(textOverride = null) {
+  const message = textOverride || document.getElementById('prompt').value;
+  const response = await fetch('/api/chat', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({session_id: sessionId, message, use_voice: true})
+  });
+  const data = await response.json();
+  document.getElementById('answer').innerText = data.answer || data.detail;
+  document.getElementById('plugin').innerText = JSON.stringify(data.plugin_data || {}, null, 2);
+  if (data.audio_url) {
+    new Audio(data.audio_url).play();
+  } else if ('speechSynthesis' in window) {
+    const utt = new SpeechSynthesisUtterance(data.answer);
+    utt.voice = speechSynthesis.getVoices().find(v => v.name.toLowerCase().includes('ada')) || null;
+    speechSynthesis.speak(utt);
+  }
+}
+
+function listenVoice() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    alert('Speech recognition is not supported in this browser.');
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.onresult = (event) => {
+    const text = event.results[0][0].transcript;
+    document.getElementById('prompt').value = text;
+    sendText(text);
+  };
+  recognition.start();
+}
+</script>
+</body>
+</html>
