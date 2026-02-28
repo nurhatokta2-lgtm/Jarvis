@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.venv/
+data/
+.env
+EOF && git add .gitignore && git commit --amend --no-edit
